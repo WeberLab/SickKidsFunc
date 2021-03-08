@@ -1,0 +1,6 @@
+#!/bin/bash
+#find ./sourcedata/ -maxdepth 1 -type d > ./code/directories.txt
+find . -name func -type d > ./code/funcdir.txt
+#awk '{print $NF}' FS=/ ./code/funcdir.txt > ./code/ftmp.txt
+cat ./code/funcdir.txt | sort > ./code/ftmp.txt
+cat ./code/ftmp.txt | cut -d"/" -f2 > ./code/funcdir.txt

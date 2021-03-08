@@ -1,0 +1,55 @@
+#/mnt/WeberLab/Projects/NeonateSucrose/SickKids/code
+
+source="/mnt/WeberLab/Projects/NeonateSucrose/SickKids/sourcedata/"
+
+mkdir /mnt/WeberLab/Projects/NeonateSucrose/SickKids/Raw2/v01
+mkdir /mnt/WeberLab/Projects/NeonateSucrose/SickKids/Raw2/v02
+mkdir /mnt/WeberLab/Projects/NeonateSucrose/SickKids/Raw2/v11
+mkdir /mnt/WeberLab/Projects/NeonateSucrose/SickKids/Raw2/v12
+
+
+v01="/mnt/WeberLab/Projects/NeonateSucrose/SickKids/Raw2/v01/"
+v02="/mnt/WeberLab/Projects/NeonateSucrose/SickKids/Raw2/v02/"
+v11="/mnt/WeberLab/Projects/NeonateSucrose/SickKids/Raw2/v11/"
+v12="/mnt/WeberLab/Projects/NeonateSucrose/SickKids/Raw2/v12/"
+
+
+number=$(ls -l $source | grep "^d" | wc -l)
+
+count=1
+for d in $source*; do
+
+
+if [[ ${d:(-2):2}  -eq 01 ]]; then
+cp -r $d $v01
+echo "${d} is cped in SickKids/Raw2/v01"
+
+elif [[ ${d:(-2):2}  -eq 02 ]]; then
+cp -r $d $v02
+echo "${d} is cped in SickKids/Raw2/v02"
+
+elif [[ ${d:(-2):2}  -eq 11 ]]; then
+cp -r $d $v11
+echo "${d} is cped in SickKids/	Raw2/v11"
+
+else
+cp -r $d $v12
+echo "${d} is cped in SickKids/Raw2/v12"
+fi
+
+echo "file ${count} of ${number} has been copied"
+count=$((count + 1)) 
+
+done
+
+
+directory="/mnt/WeberLab/Projects/NeonateSucrose/SickKids/Raw2/"
+cd /mnt/WeberLab/Projects/NeonateSucrose/SickKids/Raw2/
+
+
+for f in $directory*; do 
+
+
+
+
+done
