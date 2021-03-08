@@ -1,0 +1,30 @@
+#!/bin/bash
+
+###Written by Alexander Weber
+###Jan 2021
+
+###Exit if an error occurs
+set -e
+
+###Define pathways
+toplvl=/mnt/WeberLab/Projects/NeonateSucrose/SickKids
+
+###
+
+subjectlist=${toplvl}/code/funcdir.txt
+
+touch FD.csv
+echo "SubjectNumber,FD" > FD.csv
+
+while read -r subject;
+do
+    printf "\n\n MCLIFT on Participant ${subject}\n\n"
+
+    ###
+    mkdir ${toplvl}/derivatives/fmri/${subject}
+    mcflirt -in ${toplvl}/${subject}/func/${subject}_task-rest_bold.nii.gz -stats -mats -plots
+    mv ${toplvl}/${subject}/func/*_mcf* ${toplvl}/derivatives/fmri/${subject}/
+    FD=$(FD.r ${toplvl}/derivatives/fmri/${subject}/*.par)
+    echo "${subject},${FD}" >> FD.csv
+
+done < $subjectlist
