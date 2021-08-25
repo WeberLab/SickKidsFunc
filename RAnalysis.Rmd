@@ -1,0 +1,326 @@
+---
+title: "SickKidsSucrose"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+if (!require(tidyverse)) install.packages("tidyverse")
+library(tidyverse)
+if (!require(lme4)) install.packages("lme4")
+library(lme4)
+if (!require(Hmisc)) install.packages("Hmisc")
+library(Hmisc)
+if (!require(corrplot)) install.packages("corrplot")
+library(corrplot)
+if (!require(PerformanceAnalytics)) install.packages("PerformanceAnalytics")
+library(PerformanceAnalytics)
+if (!require(emmeans)) install.packages("emmeans")
+library(emmeans)
+if (!require(broom.mixed)) install.packages("broom.mixed")
+library(broom.mixed)
+#if (!require(performance)) install.packages("performance")
+#library(performance)
+```
+
+
+# Read Data
+
+```{r}
+fulldata = read.csv("sucrose_master_data2.csv")
+```
+
+# Subjects with full runs
+
+```{r}
+fullruns <- fulldata %>% drop_na()
+fullruns$AGE <- as.factor(fullruns$AGE)
+head(fullruns)
+```
+
+# Histograms
+
+```{r}
+hist(fullruns$gm_m)
+```
+```{r}
+hist(fullruns$Sucrose)
+```
+```{r}
+fullruns$SucroseCat <- cut(fullruns$Sucrose, c(-1,1,30))
+summary(fullruns$SucroseCat)
+```
+
+# Basic linear model
+## Scan Age
+
+```{r}
+basic.lm_scanage <- lm(gm_m ~ Scan.Age, data = fullruns)
+summary(basic.lm_scanage)
+```
+### Plot
+
+```{r}
+(prelim_plot_scanage <- ggplot(fullruns, aes(x = Scan.Age, y = gm_m)) +
+  geom_point() +
+  geom_smooth(method = "lm"))
+```
+### Pearson Correlation
+```{r}
+cor(fullruns$Scan.Age, fullruns$gm_m, method="pearson")
+cor.test(fullruns$Scan.Age, fullruns$gm_m, method="pearson")
+```
+### Residuals
+```{r}
+plot(basic.lm_scanage, which = 1)
+```
+### Q-Q Plot
+```{r}
+plot(basic.lm_scanage, which = 2)
+```
+
+## Birth.Age
+```{r}
+basic.lm_birthage <- lm(gm_m ~ Birth.age, data = fullruns)
+summary(basic.lm_birthage)
+```
+
+### Plot
+```{r}
+(prelim_plot_birthage <- ggplot(fullruns, aes(x = Birth.age, y = gm_m)) +
+  geom_point() +
+  geom_smooth(method = "lm"))
+```
+
+## FD
+
+```{r}
+basic.lm_fd <- lm(gm_m ~ FD, data = fullruns)
+summary(basic.lm_fd)
+```
+### Plot
+```{r}
+(prelim_plot_fd <- ggplot(fullruns, aes(x = FD, y = gm_m)) +
+  geom_point() +
+  geom_smooth(method = "lm"))
+```
+### Pearson Correlation
+```{r}
+cor(fullruns$FD, fullruns$gm_m, method="pearson")
+cor.test(fullruns$FD, fullruns$gm_m, method="pearson")
+```
+### FD vs Age
+
+```{r}
+basic.lm_fdage <- lm(FD ~ Scan.Age, data = fullruns)
+summary(basic.lm_fdage)
+```
+### Plot
+```{r}
+(prelim_plot_fdage <- ggplot(fullruns, aes(x = Scan.Age, y = FD)) +
+  geom_point() +
+  geom_smooth(method = "lm"))
+```
+### Pearson Correlation
+```{r}
+cor(fullruns$FD, fullruns$Scan.Age, method="pearson")
+cor.test(fullruns$FD, fullruns$Scan.Age, method="pearson")
+```
+
+
+## Sex
+```{r}
+boxplot(gm_m ~ sex, data = fullruns)
+```
+## Sucrose
+
+```{r}
+basic.lm_sucrose <- lm(gm_m ~ Sucrose, data = fullruns)
+summary(basic.lm_sucrose)
+```
+### Plot
+
+```{r}
+(prelim_plot_sucrose <- ggplot(fullruns, aes(x = Sucrose, y = gm_m)) +
+  geom_point() +
+  geom_smooth(method = "lm"))
+```
+### Residuals
+```{r}
+plot(basic.lm_sucrose, which = 1)
+```
+### Q-Q Plot
+```{r}
+plot(basic.lm_sucrose, which = 2)
+```
+### Pearson Correlation
+```{r}
+cor(fullruns$gm_m, fullruns$Sucrose, method="pearson")
+cor.test(fullruns$gm_m, fullruns$Sucrose, method="pearson")
+```
+
+## H vs Age vs SucroseCat
+
+```{r}
+(prelim_plot_sucrose <- ggplot(fullruns, aes(x = Scan.Age, y = gm_m, colour=SucroseCat)) +
+  geom_point() +
+  geom_smooth(method = "lm"))
+```
+```{r}
+lowsucrose <- subset(fullruns, Sucrose < 1)
+highsucrose <- subset(fullruns, Sucrose >= 1)
+```
+```{r}
+install.packages("remotes")
+remotes::install_github("GRousselet/bootcorci")
+```
+```{r}
+library(bootcorci)
+bootstrapresults <- twocorci(lowsucrose$Scan.Age,lowsucrose$gm_m,highsucrose$Scan.Age,highsucrose$gm_m)
+bootstrapresults$estimate1
+bootstrapresults$estimate2
+bootstrapresults$difference
+bootstrapresults$conf.int
+bootstrapresults$p.value
+```
+
+# Correlation Matrix
+```{r}
+correlationdata <- fullruns[,c(3,4,5,14,15,17,18,20,31)]
+head(correlationdata)
+```
+## Correlation Matrix
+```{r}
+res <- cor(correlationdata)
+round(res, 2)
+```
+## Coefficients and p-Values
+```{r}
+res2 <- rcorr(as.matrix(correlationdata))
+res2
+```
+```{r}
+# ++++++++++++++++++++++++++++
+# flattenCorrMatrix
+# ++++++++++++++++++++++++++++
+# cormat : matrix of the correlation coefficients
+# pmat : matrix of the correlation p-values
+flattenCorrMatrix <- function(cormat, pmat) {
+  ut <- upper.tri(cormat)
+  data.frame(
+    row = rownames(cormat)[row(cormat)[ut]],
+    column = rownames(cormat)[col(cormat)[ut]],
+    cor  =(cormat)[ut],
+    p = pmat[ut]
+    )
+}
+```
+
+```{r}
+flattenCorrMatrix(res2$r, res2$P)
+```
+## Plot
+```{r}
+corrplot(res, type = "upper", order = "hclust", 
+         tl.col = "black", tl.srt = 45)
+```
+## Insignificant correlations are left blank
+```{r}
+#corrplot(res2$r, type="upper", order="hclust", 
+#         p.mat = res2$P, sig.level = 0.01, insig = "blank")
+```
+
+## Chart Correlation
+```{r}
+chart.Correlation(correlationdata, histogram=TRUE, pch=19)
+```
+
+# Mixed Linear Effects Model (continuous Age)
+```{r}
+mixed.lmer <- lmer(gm_m ~ Scan.Age + FD + (1|Subject.ID), data = fullruns)
+summary(mixed.lmer)
+```
+## Plot
+```{r}
+plot(mixed.lmer)
+```
+```{r}
+qqnorm(resid(mixed.lmer))
+qqline(resid(mixed.lmer))
+```
+
+
+# Mixed Linear Effects Model (categorical Age)
+
+```{r}
+mixed.lmer_cA <- lmer(gm_m ~ AGE + FD + (1|Subject.ID), REML=FALSE, data = fullruns)
+summary(mixed.lmer)
+```
+```{r}
+mixed.lmer_cA.null <- lmer(gm_m ~ FD + (1|Subject.ID), REML=FALSE, data = fullruns)
+anova(mixed.lmer_cA.null,mixed.lmer_cA)
+```
+```{r}
+boxplot(gm_m ~ AGE, data = fullruns)
+```
+
+```{r}
+emm.cA <- emmeans(mixed.lmer_cA, ~AGE)
+output.cA <- contrast(emm.cA, method = "pairwise")
+tidy.cA <- tidy(output.cA, conf.int = T) %>% 
+  select(contrast, estimate, p.value, conf.low, conf.high)
+tidy.cA$p.adj <- p.adjust(tidy.cA$p.value, method = "holm")
+tidy.cA
+```
+
+# Over all ROIs H
+```{r}
+roidata <- fullruns %>% pivot_longer(ends_with('_m'), names_to = 'ROI', values_to = 'H')
+roidata$ROI <- as.factor(roidata$ROI)
+head(roidata)
+```
+
+```{r}
+ggplot(aes(AGE, H), data = roidata) + 
+  geom_boxplot() + 
+  facet_wrap(~ ROI) 
+```
+
+```{r}
+roi.model <- lmer(H ~ AGE*ROI + FD + (1|Subject.ID), REML=FALSE, data = roidata)
+roi.null <- lmer(H ~ ROI + FD + (1|Subject.ID), REML=FALSE, data = roidata)
+anova(roi.model, roi.null)
+
+emm.roi <- emmeans(roi.model, ~AGE + ROI)
+output.roi <- contrast(emm.roi, method = "pairwise", by = "ROI")
+tidy.roi <- tidy(output.roi, conf.int = T) %>% 
+  select(ROI, contrast, estimate, p.value, conf.low, conf.high)
+tidy.roi$p.adj <- p.adjust(tidy.roi$p.value, method = "holm")
+tidy.roi
+```
+
+# Over all ROIs STD
+```{r}
+roidata_sd <- fullruns %>% pivot_longer(ends_with('_std'), names_to = 'ROI', values_to = 'SD')
+roidata_sd$ROI <- as.factor(roidata_sd$ROI)
+head(roidata_sd)
+```
+
+```{r}
+ggplot(aes(AGE, SD), data = roidata_sd) + 
+  geom_boxplot() + 
+  facet_wrap(~ ROI) 
+```
+
+```{r}
+roi_sd.model <- lmer(SD ~ AGE*ROI + FD + (1|Subject.ID), REML=FALSE, data = roidata_sd)
+roi_sd.null <- lmer(SD ~ ROI + FD + (1|Subject.ID), REML=FALSE, data = roidata_sd)
+anova(roi_sd.model, roi_sd.null)
+
+emm_sd.roi <- emmeans(roi_sd.model, ~AGE + ROI)
+output_sd.roi <- contrast(emm_sd.roi, method = "pairwise", by = "ROI")
+tidy_sd.roi <- tidy(output_sd.roi, conf.int = T) %>% 
+  select(ROI, contrast, estimate, p.value, conf.low, conf.high)
+tidy_sd.roi$p.adj <- p.adjust(tidy_sd.roi$p.value, method = "holm")
+tidy_sd.roi
+```
