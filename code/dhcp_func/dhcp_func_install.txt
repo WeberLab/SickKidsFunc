@@ -1,0 +1,28 @@
+There may be an updated version since this .txt was last updated. So check https://git.fmrib.ox.ac.uk/seanf/dhcp-neonatal-fmri-pipeline/-/tree/master
+
+1) pip install git+https://git.fmrib.ox.ac.uk/seanf/dhcp-neonatal-fmri-pipeline.git@v1.2
+
+
+## change this path to where you would like the files to be stored ##
+2) dhcp_fetch_resources.py --path=/home/johann.drayne/.local/lib/python3.8/site-packages/dhcp/
+
+
+3) if FIX is not set-up follow R instructions in 
+http://weberlab.wikidot.com/fmri
+
+
+## this may be fixed in later versions but as of v1.2 ##
+4) in func/denoise.py line 199 
+noise_idx = np.array(noise_idx) -  1 —> noise_idx = (np.array(noise_idx)).astype(int) -  1
+
+
+## If CUDA is not set-up you will need to link the correct one. ##
+## As of 17-08-2021 dHCP func will only work on Boltz (due to GPU compatbilities) ##
+5.1) ln -sf ${FSLDIR}/bin/eddy_cuda9.1 ${FSLDIR}/bin/eddy_cuda
+5.2) in util/fsl.py line 111 
+cmd = op.join(path, 'eddy') —> cmd = op.join(path, 'eddy_cuda’)
+
+
+## If using your own training file for FIX ##
+6) Update path in 
+/home/johann.drayne/.local/lib/python3.8/site-packages/dhcp/resources/settings.json
