@@ -168,6 +168,8 @@ A[group_pipeline_run.sh] --> D[dhcp_func.py]
 D[dhcp_func.py] --> B[input_dhcp_func.sh]
 B[input_dhcp_func.sh] --> D[dhcp_func.py]
 ```
+
+![dhcp_func_workflow](images/dhcp_func_workflow.png)
 1) `group_pipeline_run.sh` is the main script which you use if you want to run on all the subjects
 2) `training_subjects.txt` only stores the subjects that you want to run the script on. e.g.`v01,MS040002` Where every new line contains a different subject.
 3) `dhcp_func.py` is called by `group_pipeline_run.sh`. This script contains all the 'dHCP code'. If you want to want a `mcflirt` version of the script or only run each subject to a certain point. This is the script which you will edit.
